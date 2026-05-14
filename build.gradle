@@ -1,43 +1,48 @@
+// Root project: a pure aggregator. It builds no code of its own — it only holds
+// configuration shared by every module, so each module's build.gradle stays small.
+//
+// Plugins are declared here with `apply false`: that puts them on the build
+// classpath for the whole build without applying them to the root project. Each
+// module then applies the ones it actually needs, by id and with no version.
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '4.0.6'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version "${springBootVersion}" apply false
+    id 'io.spring.dependency-management' version "${dependencyManagementVersion}" apply false
 }
 
-group = 'com.toplms'
-version = '0.0.1-SNAPSHOT'
-description = 'toplms'
+// `subprojects { }` runs this configuration block against every module
+// (engine, app, and any future plugins) — written once here instead of being
+// copy-pasted into each module's build file.
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+    group = projectGroup
+    version = projectVersion
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(javaVersion.toInteger())
+        }
     }
-}
 
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springAiVersion', "2.0.0-M5")
-}
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
-    runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    repositories {
+        mavenCentral()
     }
-}
 
-tasks.named('test') {
-    useJUnitPlatform()
+    // Importing the Spring Boot BOM lets every module declare starters with no
+    // version number — the BOM decides the versions and keeps them aligned.
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+        }
+    }
+
+    dependencies {
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
 }

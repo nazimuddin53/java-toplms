@@ -1,0 +1,28 @@
+// engine — the core library module. It is NOT bootable: no main() method, and
+// no org.springframework.boot plugin. It produces a plain jar that :app (and
+// future feature modules) depend on.
+//
+// `java-library` (rather than plain `java`) unlocks the `api` configuration:
+// dependencies declared with `api` are visible to modules that depend on engine,
+// while `implementation` dependencies stay private to engine.
+//
+// Toolchain, repositories, group/version, the Spring Boot BOM and the common
+// test setup all come from the root build.gradle's `subprojects { }` block.
+plugins {
+    id 'java-library'
+}
+
+description = 'engine — core library: shared domain, tenant infrastructure, common services'
+
+dependencies {
+    // `api`, not `implementation`: engine will expose JPA entities and repositories
+    // as part of its public surface, so :app must see JPA on its classpath too.
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}

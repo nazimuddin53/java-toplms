@@ -1,1 +1,3 @@
 rootProject.name = 'toplms'
+include('engine')
+include('app')
