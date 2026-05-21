@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!-- Roles list for this tenant (seeded at signup). Read-only for now. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenantName} + ' — Roles'">Workspace — Roles</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<div class="layout">
+
+    <div th:replace="~{tenant/fragments :: sidebar('roles')}"></div>
+
+    <main class="content">
+        <div class="page-head">
+            <div>
+                <h1>Roles</h1>
+                <p class="sub">Roles available to assign to users in this workspace.</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr><th>Role</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${roles}">
+                        <td><span class="pill" th:text="${r.roleName}">ADMIN</span></td>
+                        <td class="muted" th:text="${r.description}">Full access</td>
+                    </tr>
+                    <tr th:if="${roles.isEmpty()}">
+                        <td colspan="2" class="muted">No roles defined.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>

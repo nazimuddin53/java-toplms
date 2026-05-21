@@ -19,6 +19,14 @@ dependencies {
     // as part of its public surface, so :app must see JPA on its classpath too.
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    // spring-security-crypto is the small, servlet-free crypto module (BCrypt etc.).
+    // The provisioning service needs the PasswordEncoder *type* to hash passwords;
+    // the bean instance is defined in app's SecurityConfig. `implementation` (not
+    // `api`) because PasswordEncoder is an internal collaborator, not part of
+    // engine's public API. Version comes from the Spring Boot BOM.
+    implementation 'org.springframework.security:spring-security-crypto'
+
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

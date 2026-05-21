@@ -42,12 +42,12 @@ The codebase is currently a Spring Boot skeleton (`ToplmsApplication` + `applica
 
 Two dimensions to keep distinct, because Spring/Hibernate handle them differently:
 
-1. **Tenant resolution** — how an inbound HTTP request is mapped to a tenant. Typical sources: subdomain, JWT claim, `X-Tenant-ID` header. Implement once as a `CurrentTenantIdentifierResolver` (Hibernate) plus a servlet `Filter` / `HandlerInterceptor` that stashes the tenant in a `ThreadLocal` (or `RequestContextHolder`) for the duration of the request. Clear the `ThreadLocal` in a `finally` block — leaks across thread-pool reuse are the classic multi-tenant bug.
-2. **Tenant isolation strategy** — the user has stated **multi-database** (database-per-tenant). In Hibernate terms this is `MultiTenancyStrategy.DATABASE`, implemented via a `MultiTenantConnectionProvider` that returns a `Connection` from the right tenant `DataSource`. Spring's `AbstractRoutingDataSource` is a simpler alternative when you control routing yourself, but it does not coordinate with Hibernate's L2 cache or schema-per-tenant migrations.
+1. **Tenant resolution** — how an inbound HTTP request is mapped to a tenant. Path-based for now (`/{slug}/...`); subdomain or JWT claim later. Implement once as a `CurrentTenantIdentifierResolver` (Hibernate) plus a servlet `Filter` / `HandlerInterceptor` that stashes the tenant in a `ThreadLocal` (the project's `TenantContext` holder) for the duration of the request. Clear the `ThreadLocal` in a `finally` block — leaks across thread-pool reuse are the classic multi-tenant bug.
+2. **Tenant isolation strategy** — **single shared database with `tenant_id` discriminator column.** Enforced at the ORM level via Hibernate's `@TenantId` annotation (Hibernate 6.2+): a `@TenantId String tenantId` field on every tenant-scoped entity makes Hibernate auto-apply `WHERE tenant_id = ?` to every query and auto-fill the column on every insert. Never write the predicate by hand in `@Query` — a forgotten filter is a cross-tenant data leak.
 
-A `tenants` registry (often a small "master" / control-plane database) stores per-tenant `DataSource` config (JDBC URL, credentials, plan, status). The connection provider reads from this registry, lazily building and caching `HikariDataSource` instances per tenant.
+A `tenant` table (in the same shared database) stores the tenant registry: id, slug, status, plan, created_at. No per-tenant `DataSource`, no `MultiTenantConnectionProvider` — one `HikariCP` pool, one `EntityManagerFactory`. The control-plane tables (`tenant`, `superadmin_user`, `plan`) sit alongside tenant-plane tables (`course`, `enrollment`, …) in the same DB, distinguished only by the *absence* of a `tenant_id` column. Splitting the control plane into its own DB is a deferred refactor.
 
-Per-tenant **Flyway/Liquibase** migrations should run on tenant provisioning and on app startup for every active tenant — *not* via Spring Boot's auto-migration, which only sees the primary `DataSource`.
+**Flyway** runs as Spring Boot's auto-migration against the single `DataSource`. One migration folder: `src/main/resources/db/migration/`. New tenant signup is an `INSERT` into the `tenant` table — no `CREATE DATABASE`, no per-tenant Flyway loop.
 
 ### Layering convention to adopt
 

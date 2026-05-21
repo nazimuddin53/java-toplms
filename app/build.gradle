@@ -18,10 +18,20 @@ dependencies {
     implementation project(':engine')
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    // Spring Security: authentication (login) + authorization (who can see what)
+    // + CSRF protection. Adding this starter locks down ALL endpoints by default,
+    // so SecurityConfig must explicitly permit the public pages (/, /signup, /login).
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     // Thymeleaf: server-side HTML templating. A @Controller returns a view name
     // (e.g. "index"), and Thymeleaf renders templates/<name>.html with model data.
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    // Bean Validation (Jakarta Validation). Spring Boot ≥3 no longer pulls this
+    // in transitively via the web starter — declare explicitly so @Valid,
+    // @NotBlank, @Email etc. on form DTOs are actually enforced at runtime.
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     // The concrete JDBC driver belongs in the bootable module, not in engine:
     // engine only needs the JPA API, app supplies the real database driver.

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenantName} + ' — Courses'">Workspace — Courses</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<div class="layout">
+
+    <div th:replace="~{tenant/fragments :: sidebar('courses')}"></div>
+
+    <main class="content">
+        <div class="page-head">
+            <div>
+                <h1>Courses</h1>
+                <p class="sub">Courses offered in this workspace.</p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/app/admin/courses/new}">+ New course</a>
+        </div>
+
+        <div class="banner ok" th:if="${created}">
+            Course <strong th:text="${created}">Intro to X</strong> created.
+        </div>
+
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr><th>Title</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${courses}">
+                        <td th:text="${c.title}">Intro to Java</td>
+                        <td class="muted" th:text="${c.description}">A beginner course</td>
+                    </tr>
+                    <tr th:if="${courses.isEmpty()}">
+                        <td colspan="2" class="muted">No courses yet. Create your first one.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>

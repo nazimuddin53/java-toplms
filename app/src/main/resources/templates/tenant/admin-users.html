@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!-- Users list. The "created" flash attribute (set by AdminUserController after
+     a successful create + redirect) drives the success banner. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenantName} + ' — Users'">Workspace — Users</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<div class="layout">
+
+    <div th:replace="~{tenant/fragments :: sidebar('users')}"></div>
+
+    <main class="content">
+        <div class="page-head">
+            <div>
+                <h1>Users</h1>
+                <p class="sub">Everyone with a login in this workspace.</p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/app/admin/users/new}">+ New user</a>
+        </div>
+
+        <div class="banner ok" th:if="${created}">
+            User <strong th:text="${created}">jane@acme.com</strong> created.
+        </div>
+
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr><th>Name</th><th>Email</th><th>Role</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.fullName}">Jane Doe</td>
+                        <td th:text="${u.email}">jane@acme.com</td>
+                        <td><span class="pill" th:text="${u.role != null ? u.role.roleName : '—'}">ADMIN</span></td>
+                    </tr>
+                    <tr th:if="${users.isEmpty()}">
+                        <td colspan="3" class="muted">No users yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>

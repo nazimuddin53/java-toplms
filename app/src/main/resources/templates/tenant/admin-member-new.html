@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!-- Shared create form for Teachers and Students. baseUrl + singular passed in. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenantName} + ' — New ' + ${singular}">Workspace — New member</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<div class="layout">
+
+    <div th:replace="~{tenant/fragments :: sidebar(${active})}"></div>
+
+    <main class="content">
+        <div class="page-head">
+            <div>
+                <h1>New <span th:text="${#strings.toLowerCase(singular)}">teacher</span></h1>
+                <p class="sub">Add a <span th:text="${#strings.toLowerCase(singular)}">teacher</span> to your workspace.</p>
+            </div>
+            <a class="btn btn-ghost" th:href="@{${baseUrl}}">&larr; Back</a>
+        </div>
+
+        <form class="form-card" th:action="@{${baseUrl}}" th:object="${memberForm}" method="post" novalidate>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <label for="fullName">Full name</label>
+            <input type="text" id="fullName" th:field="*{fullName}" placeholder="John Smith">
+            <span class="error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">err</span>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" th:field="*{email}" placeholder="john@acme.com" autocomplete="off">
+            <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">err</span>
+
+            <label for="password">Temporary password</label>
+            <input type="password" id="password" th:field="*{password}" placeholder="At least 8 characters" autocomplete="new-password">
+            <span class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">err</span>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    Create <span th:text="${#strings.toLowerCase(singular)}">teacher</span>
+                </button>
+                <a class="btn btn-ghost" th:href="@{${baseUrl}}">Cancel</a>
+            </div>
+        </form>
+    </main>
+
+</div>
+</body>
+</html>

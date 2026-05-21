@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!-- Shared list page for Teachers and Students. The controller passes plural,
+     singular, active and baseUrl so one template serves both sections. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenantName} + ' — ' + ${plural}">Workspace — Members</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<div class="layout">
+
+    <div th:replace="~{tenant/fragments :: sidebar(${active})}"></div>
+
+    <main class="content">
+        <div class="page-head">
+            <div>
+                <h1 th:text="${plural}">Teachers</h1>
+                <p class="sub">People in this workspace with the
+                    <span th:text="${singular}">Teacher</span> role.</p>
+            </div>
+            <a class="btn btn-primary" th:href="@{${baseUrl} + '/new'}">
+                + New <span th:text="${#strings.toLowerCase(singular)}">teacher</span>
+            </a>
+        </div>
+
+        <div class="banner ok" th:if="${created}">
+            <span th:text="${singular}">Teacher</span>
+            <strong th:text="${created}">jane@acme.com</strong> created.
+        </div>
+
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr><th>Name</th><th>Email</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${members}">
+                        <td th:text="${m.fullName}">Jane Doe</td>
+                        <td th:text="${m.email}">jane@acme.com</td>
+                    </tr>
+                    <tr th:if="${members.isEmpty()}">
+                        <td colspan="2" class="muted">
+                            No <span th:text="${#strings.toLowerCase(plural)}">teachers</span> yet.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>

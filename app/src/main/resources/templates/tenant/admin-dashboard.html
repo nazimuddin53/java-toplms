@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- Admin overview. Sidebar comes from the shared fragment; this page writes the
+     stat cards and quick links. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenantName} + ' — Admin'">Workspace — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<div class="layout">
+
+    <div th:replace="~{tenant/fragments :: sidebar('dashboard')}"></div>
+
+    <main class="content">
+        <div class="page-head">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="sub">
+                    Welcome, <span th:text="${fullName}">Jane</span>
+                    (<span th:text="${roleName}">ADMIN</span>)
+                </p>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="label">Courses</div>
+                <div class="value" th:text="${courseCount}">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">Teachers</div>
+                <div class="value" th:text="${teacherCount}">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">Students</div>
+                <div class="value" th:text="${studentCount}">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">Workspace URL</div>
+                <div class="value small">toplms.app/<span th:text="${slug}">acme</span></div>
+            </div>
+        </div>
+
+        <div class="panel" style="padding: 1.5rem;">
+            <p class="muted" style="font-size: .92rem; line-height: 1.7;">
+                Manage your workspace from the sidebar:
+                <a th:href="@{/app/admin/courses}" style="color: var(--accent);">Courses</a>,
+                <a th:href="@{/app/admin/teachers}" style="color: var(--accent);">Teachers</a>,
+                <a th:href="@{/app/admin/students}" style="color: var(--accent);">Students</a>,
+                and <a th:href="@{/app/admin/roles}" style="color: var(--accent);">Roles</a>.
+            </p>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>
