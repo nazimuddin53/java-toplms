@@ -4,8 +4,9 @@ A **multi-tenant Learning Management System (LMS)**, built as a SaaS product on
 Spring Boot. Each business signs up, gets its own isolated workspace, and manages
 its own users, roles, courses, and learners.
 
-> Early development. Signup, tenant provisioning, login, roles, and a tenant
-> admin dashboard work end to end. The LMS domain (courses, enrolments) is next.
+> Early development. Signup, tenant provisioning, login, roles, a tenant admin
+> dashboard, and management of courses/teachers/students work end to end.
+> Enrolments and the learner-facing experience are next.
 
 For deep detail (data model, security beans, URL map, glossary) see
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). This README focuses on **how the
@@ -42,12 +43,16 @@ The platform serves three audiences, kept apart by URL and by role:
             ADMIN  → /app/admin    (admin dashboard)
             other  → /app/profile
 
-3. ADMINISTER  (the ADMIN runs the workspace)
-   /app/admin           overview: user & role counts
-   /app/admin/users     list users · "New user" → create form
-   /app/admin/roles     the tenant's roles
-      • Creating a user: tenant comes from the logged-in admin (never the form);
-        the chosen role must belong to that tenant; password is BCrypt-hashed.
+3. ADMINISTER  (the ADMIN runs the workspace, via a sidebar)
+   /app/admin            overview: course / teacher / student counts
+   /app/admin/courses    list + create courses
+   /app/admin/teachers   list + add teachers  (users with the INSTRUCTOR role)
+   /app/admin/students   list + add students  (users with the LEARNER role)
+   /app/admin/roles      the tenant's roles
+      • Teachers/Students are just tenant users filtered by role; the section
+        decides the role, so those forms have no role field.
+      • Everything is scoped to the admin's own tenant (taken from the principal,
+        never the form); new accounts get a BCrypt-hashed password.
 
 4. ACCESS CONTROL  (enforced server-side)
    /app/admin/** requires ROLE_ADMIN. A logged-in INSTRUCTOR/LEARNER hitting it
@@ -74,8 +79,9 @@ Then walk the working process yourself:
 2. Fill the signup form → you're redirected to **/login**
 3. Sign in with the email/password you just chose
 4. As the founding **ADMIN** you land on the **admin dashboard** (`/app/admin`)
-5. **Users → New user** → add an INSTRUCTOR; sign out and log in as them to see
-   the non-admin experience (they go to `/app/profile`, and `/app/admin` is 403)
+5. Use the sidebar: **Courses** (add a course), **Teachers** / **Students** (add
+   people). Then sign out and log in as a teacher to see the non-admin
+   experience (they land on `/app/profile`, and `/app/admin` returns 403).
 
 > If a previous run is still up, stop it first (Ctrl+C) — otherwise port 8080 is
 > held by old code and you'll be testing a stale build.

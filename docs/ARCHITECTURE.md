@@ -2,11 +2,12 @@
 
 A multi-tenant Learning Management System (LMS) built as a SaaS product on
 Spring Boot. This document describes how the application is structured and how
-its main flows (signup, login, admin user management) actually work, as built.
+its main flows (signup, login, and admin management of users, courses, teachers
+and students) actually work, as built.
 
-> Status: early development. Authentication, tenant provisioning, roles, and a
-> tenant admin dashboard are implemented. The LMS domain (courses, enrolments)
-> is not built yet.
+> Status: early development. Authentication, tenant provisioning, roles, a tenant
+> admin dashboard, and management of courses/teachers/students are implemented.
+> Enrolments and the learner-facing experience are not built yet.
 
 ---
 
@@ -44,11 +45,15 @@ no opinion about HTTP belongs here.
 
 ```
 engine/src/main/java/com/toplms/
-├── master/
+├── master/            CONTROL PLANE — tenants, users, roles
 │   ├── domain/        Tenant, TenantUser, TenantRole, TenantStatus   (@Entity)
 │   ├── repository/    TenantRepository, TenantUserRepository, TenantRoleRepository
 │   └── service/       TenantProvisioningService, TenantUserService,
 │                      NewTenantCommand, NewUserCommand, *Exception
+├── tenant/            TENANT PLANE — the LMS domain (per-tenant content)
+│   ├── domain/        Course   (@Entity)
+│   ├── repository/    CourseRepository
+│   └── service/       CourseService, NewCourseCommand
 └── config/tenant/     TenantContext (ThreadLocal holder, for future tenant routing)
 ```
 
@@ -66,8 +71,9 @@ app/src/main/java/com/toplms/
 └── web/
     ├── publicpage/   HomeController, SignupController, SignupForm
     ├── auth/         LoginController (GET /login only)
-    └── tenant/       AdminDashboardController, AdminUserController,
-                      AdminRoleController, TenantProfileController, CreateUserForm
+    └── tenant/       AdminDashboardController, AdminUserController, AdminRoleController,
+                      AdminCourseController, AdminMemberController (teachers+students),
+                      TenantProfileController, CreateUserForm, CourseForm, MemberForm
 
 app/src/main/resources/
 ├── application.yaml
@@ -76,7 +82,9 @@ app/src/main/resources/
     ├── public/       index.html (landing), signup.html
     ├── auth/         login.html
     └── tenant/       profile.html, admin-dashboard.html, admin-users.html,
-                      admin-new-user.html, admin-roles.html, fragments.html (sidebar)
+                      admin-new-user.html, admin-roles.html, admin-courses.html,
+                      admin-course-new.html, admin-members.html, admin-member-new.html,
+                      fragments.html (shared sidebar)
 ```
 
 **Why the split:** `engine` can't `import` anything from `app` (Gradle won't allow
@@ -93,10 +101,10 @@ scoped to a tenant by a foreign key. Control-plane tables (`tenant`) describe th
 businesses themselves; tenant-scoped tables (`tenant_user`, `tenant_role`) carry
 a `tenant_id`.
 
-> Target (not yet built): when the LMS domain lands (courses, enrolments), those
-> tenant-scoped entities will use Hibernate's `@TenantId` so every query is
-> auto-filtered by tenant. For now, tenant scoping is done with explicit
-> `@ManyToOne Tenant` associations and `findByTenant_Id(...)` queries.
+> `Course` is the first tenant-plane entity (package `com.toplms.tenant`). For now
+> tenant scoping is done with an explicit `@ManyToOne Tenant` association plus
+> `findByTenant_Id(...)` queries. Target (not yet built): switch tenant-scoped
+> entities to Hibernate's `@TenantId` so every query is auto-filtered by tenant.
 
 The schema is currently created by Hibernate (`spring.jpa.hibernate.ddl-auto:
 update`). Production should switch to Flyway migrations (`ddl-auto: validate`).
@@ -142,6 +150,19 @@ Seeded automatically at signup: every new tenant gets ADMIN, INSTRUCTOR, LEARNER
 
 > `TenantUser` lives in `master/` (not a tenant-scoped package) because login
 > happens by email *before* we know the tenant — the lookup can't be tenant-scoped.
+
+### `course` — a course (tenant plane)
+
+| Column | Notes |
+| --- | --- |
+| `id` | PK |
+| `tenant_id` | FK → `tenant` (`@ManyToOne`) — which workspace owns it |
+| `title` | not null |
+| `description` | free text |
+| `created_at` | set once on insert |
+
+> "Teachers" and "students" are **not** separate tables — they are `tenant_user`
+> rows filtered by role (`INSTRUCTOR` / `LEARNER`).
 
 ---
 
@@ -235,6 +256,15 @@ POST /app/admin/users (CreateUserForm, @Valid)
 | GET | `/app/admin/users/new` | AdminUserController | ROLE_ADMIN |
 | POST | `/app/admin/users` | AdminUserController | ROLE_ADMIN |
 | GET | `/app/admin/roles` | AdminRoleController | ROLE_ADMIN |
+| GET | `/app/admin/courses` | AdminCourseController | ROLE_ADMIN |
+| GET | `/app/admin/courses/new` | AdminCourseController | ROLE_ADMIN |
+| POST | `/app/admin/courses` | AdminCourseController | ROLE_ADMIN |
+| GET | `/app/admin/teachers` | AdminMemberController | ROLE_ADMIN |
+| GET | `/app/admin/teachers/new` | AdminMemberController | ROLE_ADMIN |
+| POST | `/app/admin/teachers` | AdminMemberController | ROLE_ADMIN |
+| GET | `/app/admin/students` | AdminMemberController | ROLE_ADMIN |
+| GET | `/app/admin/students/new` | AdminMemberController | ROLE_ADMIN |
+| POST | `/app/admin/students` | AdminMemberController | ROLE_ADMIN |
 
 ---
 
